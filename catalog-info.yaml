@@ -8,4 +8,4 @@ spec:
   lifecycle: production
   owner: petstore@example.com
   definition:
-    $json: https://github.com/department-of-veterans-affairs/bip-bih-self-service/tree/main/
+    $json: https://github.com/department-of-veterans-affairs/bip-bih-self-service/tree/main/README.md
