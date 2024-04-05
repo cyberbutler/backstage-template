@@ -3,24 +3,24 @@ kind: Template
 metadata:
   namespace: default
   annotations:
-    backstage.io/managed-by-location: url:https://github.com/department-of-veterans-affairs/bip-bih-self-service/tree/main/templates/react-template.yaml
+    backstage.io/managed-by-location: url:https://github.com/department-of-veterans-affairs/bip-bih-self-service/tree/main/templates/single-spa-root.yaml
     backstage.io/managed-by-origin-location: url:https://github.com/department-of-veterans-affairs/bip-bih-self-service/blob/main/templates.yaml
-    backstage.io/view-url: https://github.com/department-of-veterans-affairs/bip-bih-self-service/tree/main/templates/react-template.yaml
-    backstage.io/edit-url: https://github.com/department-of-veterans-affairs/bip-bih-self-service/edit/main/templates/react-template.yaml
+    backstage.io/view-url: https://github.com/department-of-veterans-affairs/bip-bih-self-service/tree/main/templates/single-spa-root.yaml
+    backstage.io/edit-url: https://github.com/department-of-veterans-affairs/bip-bih-self-service/edit/main/templates/single-spa-root.yaml
     backstage.io/source-location: url:https://github.com/department-of-veterans-affairs/bip-bih-self-service/tree/main/templates/
-  name: react-template-dev
-  title: React App - Dev
-  description: Automatically deploys a React app in dev on the BIP platform.
+  name: single-spa-root-dev
+  title: Single Spa Root Config - Dev
+  description: Automatically deploys a single spa root config in dev.
   tags:
-    - react
     - archetype
     - provisioning
     - dev
+    - single-spa
   allowedRoles:
     - bip-bih-admins
     - bip-bih-template-exec
-  uid: 718cb526-1873-4a90-affb-37d0de77a6f4
-  etag: 96ad22834d3a9becfa64102a47005ad1e0f7f45a
+  uid: c352ca3e-2e82-495a-827e-6cc01866c842
+  etag: 04d4d069e4f575800e6e18710a0c0282d6669d5a
 relations:
   - type: ownedBy
     targetRef: group:default/bip-accelerators
@@ -32,18 +32,13 @@ spec:
   owner: group:bip-accelerators
   type: provision
   parameters:
-    - title: React Overview
+    - title: Single Spa Root Config Overview
       properties:
         overview:
           ui:field: TemplateOverviewExtension
-          name: React Template
+          name: Single Spa Root Template
           header: Please take a brief moment to verify these steps prior to template run
           bodyArrray:
-            - Please Note - ***This Archetype uses a MonoRepo Architecture and
-              it is recomended to use the MFE/Single-Spa Architecture.*** Both
-              the Root and MFE App self-services are available in our
-              ***[create](/create?filters%5Bkind%5D=template&filters%5Btags%5D=single-spa&filters%5Buser%5D=all)***
-              tab.
             - Verify
               ***[these](/docs/default/component/bih/self-service/self-service/#prerequisites)***
               self-service pre-requisites.
@@ -69,21 +64,23 @@ spec:
           type: string
           pattern: ^[a-z]*$
           ui:help: All lower case, no spaces
-          default: blue
+          default: bih
           description: Deploy the application within an existing tenant. This will be
             deployed in <tenant>-dev
           ui:autofocus: true
-    - title: Archetype properties for React
+    - title: Archetype properties for Single Spa
       required:
         - artifactId
         - artifactName
+        - orgName
+        - realm
       properties:
         artifactId:
           title: Artifact Id
           type: string
           pattern: ^[a-z]+(-[a-z]+)*$
           ui:help: Kebab case
-          default: bip-bih-react-ui
+          default: bip-bih-root-ui
           description: The new project ID used for deployment, will also be used as Client
             Id in KeyCloak
           ui:autofocus: true
@@ -91,9 +88,17 @@ spec:
           title: Artifact Name
           type: string
           ui:help: Kebab case
-          default: bih-react-ui
+          default: bih-root-ui
+          pattern: ^[a-z]+(-[a-z]+)*$
           description: Name of the new project, usually same as artifactId without "bip-"
             prefix
+          ui:autofocus: true
+        orgName:
+          title: Org Name
+          type: string
+          ui:help: Kebab case
+          default: va-bip
+          description: Organization owner
           ui:autofocus: true
         realm:
           title: KeyCloak Realm
@@ -107,16 +112,123 @@ spec:
             - docgenmt
             - examvrp
             - idp
+    - title: CodeQL Configuration
+      required:
+        - codeQLSystemID
+        - codeQLSystemName
+        - codeQLSystemOwnerName
+        - ownerEmail
+      properties:
+        codeQLSystemID:
+          title: System ID
+          type: string
+          description: System ID of this application
+          default: "2068"
+        codeQLSystemName:
+          title: System Name
+          type: string
+          description: System Name of this application
+          default: bip-bih-root-ui
+        codeQLSystemOwnerName:
+          title: System Owner
+          type: string
+          description: System Owner of this application
+          default: BIP Platform Accelerators
+        ownerEmail:
+          title: System Owner
+          type: string
+          description: Email linked to owner of this application
+          default: E_API_Framework@bah.com
+    - title: Catalog File
+      required:
+        - entityOwner
+        - entitySystem
+        - setupDocs
+      properties:
+        entityOwner:
+          title: Application's Tenant
+          type: string
+          description: The Entity Owner
+          ui:help: Usually the Namespace Prefix
+          enum:
+            - NA
+            - archetypetest
+            - bah
+            - benefits-services
+            - bffs
+            - bih
+            - blue
+            - bpds
+            - bss
+            - bteam
+            - cap
+            - cest
+            - cfapi
+            - claims
+            - cpui
+            - crp-utils
+            - crp
+            - data-synchronization
+            - dbq-portal
+            - dmdt
+            - docgen
+            - empwr
+            - exam-destination
+            - exam-mgmt
+            - fiduciary-service
+            - fti-capture
+            - fti-file-repo
+            - fti-soap
+            - ibs
+            - mbms
+            - pacman
+            - pension-automation
+            - platform-engineering
+            - platform-system-team
+            - platform
+            - pur
+            - rrc
+            - vasrd
+            - vbms-awards
+            - vbms-ratings
+            - vbms-vet-form-fillin
+            - vbmsc
+            - vefs-claimevidence
+            - vefs-rrc
+            - vefs
+            - vetdep
+            - work-queue
+        entitySystem:
+          title: Application's Product
+          type: string
+          enum:
+            - NA
+            - bep
+            - bgs
+            - bia-services
+            - bip-platform
+            - crp
+            - empwr
+            - mbms
+            - vbms
+        setupDocs:
+          title: Do you want BIH to publish the Docs for this application?
+          type: string
+          enum:
+            - "true"
+            - "false"
+          enumNames:
+            - Yes
+            - No
     - title: Choose a location to Publish
       required:
         - repoName
       properties:
         repoName:
-          ui:field: GithubRepoCheck
           title: Application Repository Name
           type: string
           description: "Must be a unique name in github. Suggested to be the same as
-            ArtifactId. Example: bip-bie-reference-sp"
+            ArtifactId. Example: bip-bih-root-ui"
           pattern: ^[a-z0-9]+(-[a-z0-9]+)*$
           ui:help: Kebab case
     - title: Assign Collaborators to Your New Application's Repo
@@ -150,65 +262,73 @@ spec:
           title: Argo Project
           type: string
           ui:help: Project to deploy in ArgoCD
+          default: bia-bih
   steps:
     - id: scaffolder-metrics-track
       action: scaffolderMetrics:trackTask
     - id: get-credentials
       name: Grabbing Credentials
       action: custom:getToken
-    - id: clone-archetype-repo
-      name: Cloning Application Archetype
-      action: custom:gitClone
+    - action: custom:github:actions:dispatch:wait
+      name: Dispatch Github Action Workflow
       input:
-        repoUrl: https://github.com/department-of-veterans-affairs/bip-archetype-ui-react
-        removeRemote: false
-        useBranch: default
-    - id: clone-archetype-config-repo
-      name: Cloning Application Archetype Config
-      action: custom:gitClone
-      input:
-        repoUrl: https://github.com/department-of-veterans-affairs/bip-archetype-react-config
-        removeRemote: false
-        useBranch: default
-    - id: clone-tenant-config
-      name: Cloning Tenant Chart Repo
-      action: custom:gitClone
-      input:
-        repoUrl: https://github.com/department-of-veterans-affairs/${{
-          parameters.chartRepoName }}
-        removeRemote: false
-        useBranch: development
-    - id: run-archetype-generation
-      name: Creating Application and Charts
-      action: custom:reactAction
-      input:
-        artifactId: ${{ parameters.artifactId }}
-        artifactName: ${{ parameters.artifactName }}
-        projectNameSpacePrefix: ${{ parameters.projectNameSpacePrefix }}
-        chartRepoName: ${{ parameters.chartRepoName }}
-        enableOPA: false
-        includeSecureEnclave: false
-        argoProject: ${{ parameters.argoProject }}
-        reactAppClientId: ${{ parameters.artifactId }}
-        reactAppBSSUrl: https://bss-int.dev.bip.va.gov/auth
-        reactAppBRPUrl: https://blue.dev.bip.va.gov
-        reactAppRealm: ${{ parameters.realm }}
-        archetype: bip-archetype-ui-react
-        archetypeConfig: bip-archetype-react-config
-        servicePort: 80
-    - id: publish-app
-      name: Publishing Application to Github
-      action: publish:github
-      input:
+        repoUrl: github.com?repo=bip-archetype-generator&owner=department-of-veterans-affairs
+        workflowId: archetype_generator.yml
         token: ${{ steps['get-credentials'].output.SCAFFOLDER_CREDENTIALS }}
-        repoUrl: github.com?repo=${{ parameters.repoName
-          }}&owner=department-of-veterans-affairs
-        sourcePath: ./bip-archetype-ui-react/${{ parameters.artifactId }}
-        defaultBranch: main
-        repoVisibility: internal
-        protectDefaultBranch: true
-        gitAuthorName: BIH scaffolder initial commit
-        requiredApprovingReviewCount: 1
+        branchOrTagName: main
+        workflowInputs:
+          createCharts: "true"
+          publishArchetype: "true"
+          archetypeTest: "false"
+          jsonInput: >
+            { "archetype": "bip-mfe-root-archetype",
+              "createCharts": "true",
+              "publishArchetype": "true",
+              "artifactName": "${{ parameters.artifactName }}",
+              "newRepoName": "${{ parameters.repoName }}",
+              "newRepoPrivate": "false",
+              "repoDescription": "This is a single spa root app in the ${{ parameters.projectNameSpacePrefix }}-dev namespace",
+              "newRepoCommitMessage": "Initial Commit of the ${{ parameters.artifactName }} single-spa root config",
+              "organizationName": "department-of-veterans-affairs",
+              "orgName": "${{ parameters.orgName }}",
+              "namespacePrefix": "${{ parameters.projectNameSpacePrefix }}",
+              "artifactId": "${{ parameters.artifactId }}",
+              "chartRepo": "${{ parameters.chartRepoName }}",
+              "codeQLSystemID": "${{ parameters.codeQLSystemID }}",
+              "codeQLSystemName": "${{ parameters.codeQLSystemName }}",
+              "codeQLSystemOwnerName": "${{ parameters.codeQLSystemOwnerName }}",
+              "ownerEmail": "${{ parameters.ownerEmail }}",
+              "description": "This is a single spa root app in the ${{ parameters.projectNameSpacePrefix }}-dev namespace",
+              "entityOwner": "${{ parameters.entityOwner }}",
+              "entitySystem": "${{ parameters.entitySystem }}",
+              "setupDocs": "${{ parameters.setupDocs }}",
+              "port": "8080",
+              "argoProject": "${{ parameters.argoProject }}",
+              "jinja_ignore": [
+                  "/target/",
+                  "/node_modules/",
+                  ".ico",
+                  ".DS_Store",
+                  ".classpath",
+                  ".jks",
+                  ".settings",
+                  ".pdf",
+                  "/.git/"
+              ],
+              "rename_files": [
+                {
+                  "app/src/va-bip-vbms-root-ui.js": "app/src/${{ parameters.orgName }}-${{ parameters.artifactName }}.js"
+                },
+                {
+                  "argo-charts/argocd-apps/templates/artifactId.yaml": "argo-charts/argocd-apps/templates/${{ parameters.artifactId }}.yaml"
+                }
+              ],
+              "rename_folders": [
+                {
+                  "argo-charts/charts/artifactId": "argo-charts/charts/${{ parameters.artifactId }}"
+                }
+              ]
+            }
     - id: add-collaborators
       name: Adding collaborators
       action: custom:addCollaborators
@@ -216,47 +336,39 @@ spec:
         adminTeams: ${{ parameters.adminTeams}}
         writeTeams: ${{ parameters.writeTeams}}
         repo: ${{ parameters.repoName }}
-    - id: push-charts-to-tenant-chart-repo
-      name: Pushing Charts to Tenant Config Repo
-      action: custom:gitPushDirOrFile
+    - id: keycloak-clientid
+      name: Create a Client ID on KeyCloak
+      action: custom:createKeycloakClientId
       input:
-        sourceRepoPath: ${{ parameters.chartRepoName }}
-        chartBranch: development
-        commitEmail: BIP_Platform_Prod_Leads@bah.com
-        commitUsername: va-bip-non-prod-ops
-        commitMessage: Creating charts for React App through BIH
-        jiraTicket: ${{ parameters.jiraTicket }}
-        useJiraTicketAsFallbackBranch: true
+        clientId: ${{ parameters.artifactId }}-dev
+        name: ${{ parameters.artifactId }}-dev
+        rootUrl: https://${{ parameters.artifactId }}.dev.bip.va.gov
+        adminUrl: https://${{ parameters.artifactId }}.dev.bip.va.gov
+        redirectUris:
+          - https://ssologon.int.iam.va.gov/centrallogin/centrallanding.aspx*
+          - /*
+          - https://${{ parameters.artifactId }}.dev.bip.va.gov/*
+        webOrigins:
+          - https://${{ parameters.artifactId }}.dev.bip.va.gov
+        baseUrl: https://bss-int.dev.bip.va.gov
+        realm: ${{ parameters.realm }}
     - id: createJenkinsPipeline
       name: Creating Jenkins Pipeline
       action: custom:createJenkinsPipeline
       input:
         repoName: ${{ parameters.repoName }}
-        jenkinsURL: ${{ parameters.projectNameSpacePrefix }}
+        jenkinsNamespace: ${{ parameters.projectNameSpacePrefix }}
         template: self-service-base-template
-        jenkinsTemplateURL: bih
-    - id: keycloak-clientid
-      name: Create a Client ID on KeyCloak
-      action: custom:createKeycloakClientId
-      input:
-        clientId: ${{ parameters.artifactId }}
-        name: ${{ parameters.artifactId }}
-        rootUrl: https://${{ parameters.artifactId }}-dev.dev.bip.va.gov
-        adminUrl: https://${{ parameters.artifactId }}-dev.dev.bip.va.gov
-        redirectUris:
-          - https://ssologon.int.iam.va.gov/centrallogin/centrallanding.aspx*
-          - /*
-        webOrigins:
-          - https://${{ parameters.artifactId }}-dev.dev.bip.va.gov
-        baseUrl: https://bss-int.dev.bip.va.gov
-        realm: ${{ parameters.realm }}
+        jenkinsTemplateNamespace: bih
     - id: comment-ticket-jira
       name: Leaving Comment on Jira Ticket
       action: custom:addCommentAction
       input:
         jiraTicket: ${{ parameters.jiraTicket }}
-        appRepoUrl: ${{ steps['publish-app'].output.remoteUrl }}
-        chartRepoUrl: ${{ steps['push-charts-to-tenant-chart-repo'].output.REPO_URL }}
+        appRepoUrl: https://github.com/department-of-veterans-affairs/${{
+          parameters.repoName }}
+        chartRepoUrl: https://github.com/department-of-veterans-affairs/${{
+          parameters.chartRepoName }}
         jenkinsPipelineUrl: ${{ steps['createJenkinsPipeline'].output.SCAFFOLDER_JENKINS_URL }}
         argoProjectUrl: https://argo.dev.bip.va.gov/applications/${{
           parameters.artifactId }}-dev
@@ -264,13 +376,12 @@ spec:
     links:
       - title: Application Repo
         icon: github
-        url: ${{ steps['publish-app'].output.remoteUrl }}
-      - title: Chart Repo
+        url: https://github.com/department-of-veterans-affairs/${{ parameters.repoName
+          }}
+      - title: Tenant Chart Repo
         icon: scaffolder
-        url: ${{ steps['push-charts-to-tenant-chart-repo'].output.REPO_URL }}
-      - title: Please create and merge PR for app to deploy
-        icon: warning
-        url: ${{ steps['push-charts-to-tenant-chart-repo'].output.FALLBACK_URL }}
+        url: https://github.com/department-of-veterans-affairs/${{
+          parameters.chartRepoName }}
       - title: Jenkins Build
         icon: docs
         url: ${{ steps['createJenkinsPipeline'].output.SCAFFOLDER_JENKINS_URL }}
