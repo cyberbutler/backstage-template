@@ -1,31 +1,279 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
-# some metadata about the template itself
 metadata:
-  name: hello-world
-  title: Hello World
-  description: scaffolder Hello, World template demo
+  namespace: default
+  annotations:
+    backstage.io/managed-by-location: url:https://github.com/department-of-veterans-affairs/bip-bih-self-service/tree/main/templates/react-template.yaml
+    backstage.io/managed-by-origin-location: url:https://github.com/department-of-veterans-affairs/bip-bih-self-service/blob/main/templates.yaml
+    backstage.io/view-url: https://github.com/department-of-veterans-affairs/bip-bih-self-service/tree/main/templates/react-template.yaml
+    backstage.io/edit-url: https://github.com/department-of-veterans-affairs/bip-bih-self-service/edit/main/templates/react-template.yaml
+    backstage.io/source-location: url:https://github.com/department-of-veterans-affairs/bip-bih-self-service/tree/main/templates/
+  name: react-template-dev
+  title: React App - Dev
+  description: Automatically deploys a React app in dev on the BIP platform.
+  tags:
+    - react
+    - archetype
+    - provisioning
+    - dev
+  allowedRoles:
+    - bip-bih-admins
+    - bip-bih-template-exec
+  uid: 718cb526-1873-4a90-affb-37d0de77a6f4
+  etag: 96ad22834d3a9becfa64102a47005ad1e0f7f45a
+relations:
+  - type: ownedBy
+    targetRef: group:default/bip-accelerators
+    target:
+      kind: group
+      namespace: default
+      name: bip-accelerators
 spec:
-  owner: backstage/techdocs-core
-  type: service
-
+  owner: group:bip-accelerators
+  type: provision
   parameters:
-    - title: Fill in some steps
-      required:
-        - name
+    - title: React Overview
       properties:
-        name:
-          title: Name
+        overview:
+          ui:field: TemplateOverviewExtension
+          name: React Template
+          header: Please take a brief moment to verify these steps prior to template run
+          bodyArrray:
+            - Please Note - ***This Archetype uses a MonoRepo Architecture and
+              it is recomended to use the MFE/Single-Spa Architecture.*** Both
+              the Root and MFE App self-services are available in our
+              ***[create](/create?filters%5Bkind%5D=template&filters%5Btags%5D=single-spa&filters%5Buser%5D=all)***
+              tab.
+            - Verify
+              ***[these](/docs/default/component/bih/self-service/self-service/#prerequisites)***
+              self-service pre-requisites.
+          creationArray:
+            - Application and Charts
+            - New Repository for Application
+            - ArgoCD Charts Placed in Tenant Repository
+            - Jenkins Pipeline
+            - KeyCloak Client
+    - title: Jira Ticket and Tenant
+      required:
+        - jiraTicket
+        - projectNameSpacePrefix
+      properties:
+        jiraTicket:
+          title: Jira Ticket
           type: string
-          description: Name of new project
+          ui:help: Add your VA PM approved ticket number - BIH will add a comment to this
+            ticket at the end of this task detailing the resources created
+          ui:field: JiraValdiationFieldExtension
+        projectNameSpacePrefix:
+          title: Tenant (Namespace Prefix)
+          type: string
+          pattern: ^[a-z]*$
+          ui:help: All lower case, no spaces
+          default: blue
+          description: Deploy the application within an existing tenant. This will be
+            deployed in <tenant>-dev
           ui:autofocus: true
-          ui:options:
-            rows: 5
-
-  # here's the steps that are executed in series in the scaffolder backend
+    - title: Archetype properties for React
+      required:
+        - artifactId
+        - artifactName
+      properties:
+        artifactId:
+          title: Artifact Id
+          type: string
+          pattern: ^[a-z]+(-[a-z]+)*$
+          ui:help: Kebab case
+          default: bip-bih-react-ui
+          description: The new project ID used for deployment, will also be used as Client
+            Id in KeyCloak
+          ui:autofocus: true
+        artifactName:
+          title: Artifact Name
+          type: string
+          ui:help: Kebab case
+          default: bih-react-ui
+          description: Name of the new project, usually same as artifactId without "bip-"
+            prefix
+          ui:autofocus: true
+        realm:
+          title: KeyCloak Realm
+          type: string
+          default: idp
+          description: The KeyCloak realm to integrate into
+          enum:
+            - crpdb
+            - csap
+            - docgen
+            - docgenmt
+            - examvrp
+            - idp
+    - title: Choose a location to Publish
+      required:
+        - repoName
+      properties:
+        repoName:
+          ui:field: GithubRepoCheck
+          title: Application Repository Name
+          type: string
+          description: "Must be a unique name in github. Suggested to be the same as
+            ArtifactId. Example: bip-bie-reference-sp"
+          pattern: ^[a-z0-9]+(-[a-z0-9]+)*$
+          ui:help: Kebab case
+    - title: Assign Collaborators to Your New Application's Repo
+      properties:
+        adminTeams:
+          type: array
+          items:
+            type: string
+          title: Github teams with admin permissions.
+          ui:help: A list of teams you would like to have ADMIN access to the repo.
+          ui:field: GithubTeams
+        writeTeams:
+          type: array
+          items:
+            type: string
+          title: Github teams with write permissions.
+          ui:help: A list of teams you would like to have WRITE access to the repo.
+          ui:field: GithubTeams
+    - title: Input Tenant Chart Configurations - values can be found in the
+        bip-tenant-argocd repo
+      required:
+        - chartRepoName
+        - argoProject
+      properties:
+        chartRepoName:
+          title: Tenant Chart Repository Name
+          type: string
+          description: Name of the tenant config repository where we will place the
+            application charts
+        argoProject:
+          title: Argo Project
+          type: string
+          ui:help: Project to deploy in ArgoCD
   steps:
-    - id: log-message
-      name: Log Message
-      action: debug:log
+    - id: scaffolder-metrics-track
+      action: scaffolderMetrics:trackTask
+    - id: get-credentials
+      name: Grabbing Credentials
+      action: custom:getToken
+    - id: clone-archetype-repo
+      name: Cloning Application Archetype
+      action: custom:gitClone
       input:
-        message: "Hello, ${{ parameters.name }}"
+        repoUrl: https://github.com/department-of-veterans-affairs/bip-archetype-ui-react
+        removeRemote: false
+        useBranch: default
+    - id: clone-archetype-config-repo
+      name: Cloning Application Archetype Config
+      action: custom:gitClone
+      input:
+        repoUrl: https://github.com/department-of-veterans-affairs/bip-archetype-react-config
+        removeRemote: false
+        useBranch: default
+    - id: clone-tenant-config
+      name: Cloning Tenant Chart Repo
+      action: custom:gitClone
+      input:
+        repoUrl: https://github.com/department-of-veterans-affairs/${{
+          parameters.chartRepoName }}
+        removeRemote: false
+        useBranch: development
+    - id: run-archetype-generation
+      name: Creating Application and Charts
+      action: custom:reactAction
+      input:
+        artifactId: ${{ parameters.artifactId }}
+        artifactName: ${{ parameters.artifactName }}
+        projectNameSpacePrefix: ${{ parameters.projectNameSpacePrefix }}
+        chartRepoName: ${{ parameters.chartRepoName }}
+        enableOPA: false
+        includeSecureEnclave: false
+        argoProject: ${{ parameters.argoProject }}
+        reactAppClientId: ${{ parameters.artifactId }}
+        reactAppBSSUrl: https://bss-int.dev.bip.va.gov/auth
+        reactAppBRPUrl: https://blue.dev.bip.va.gov
+        reactAppRealm: ${{ parameters.realm }}
+        archetype: bip-archetype-ui-react
+        archetypeConfig: bip-archetype-react-config
+        servicePort: 80
+    - id: publish-app
+      name: Publishing Application to Github
+      action: publish:github
+      input:
+        token: ${{ steps['get-credentials'].output.SCAFFOLDER_CREDENTIALS }}
+        repoUrl: github.com?repo=${{ parameters.repoName
+          }}&owner=department-of-veterans-affairs
+        sourcePath: ./bip-archetype-ui-react/${{ parameters.artifactId }}
+        defaultBranch: main
+        repoVisibility: internal
+        protectDefaultBranch: true
+        gitAuthorName: BIH scaffolder initial commit
+        requiredApprovingReviewCount: 1
+    - id: add-collaborators
+      name: Adding collaborators
+      action: custom:addCollaborators
+      input:
+        adminTeams: ${{ parameters.adminTeams}}
+        writeTeams: ${{ parameters.writeTeams}}
+        repo: ${{ parameters.repoName }}
+    - id: push-charts-to-tenant-chart-repo
+      name: Pushing Charts to Tenant Config Repo
+      action: custom:gitPushDirOrFile
+      input:
+        sourceRepoPath: ${{ parameters.chartRepoName }}
+        chartBranch: development
+        commitEmail: BIP_Platform_Prod_Leads@bah.com
+        commitUsername: va-bip-non-prod-ops
+        commitMessage: Creating charts for React App through BIH
+        jiraTicket: ${{ parameters.jiraTicket }}
+        useJiraTicketAsFallbackBranch: true
+    - id: createJenkinsPipeline
+      name: Creating Jenkins Pipeline
+      action: custom:createJenkinsPipeline
+      input:
+        repoName: ${{ parameters.repoName }}
+        jenkinsURL: ${{ parameters.projectNameSpacePrefix }}
+        template: self-service-base-template
+        jenkinsTemplateURL: bih
+    - id: keycloak-clientid
+      name: Create a Client ID on KeyCloak
+      action: custom:createKeycloakClientId
+      input:
+        clientId: ${{ parameters.artifactId }}
+        name: ${{ parameters.artifactId }}
+        rootUrl: https://${{ parameters.artifactId }}-dev.dev.bip.va.gov
+        adminUrl: https://${{ parameters.artifactId }}-dev.dev.bip.va.gov
+        redirectUris:
+          - https://ssologon.int.iam.va.gov/centrallogin/centrallanding.aspx*
+          - /*
+        webOrigins:
+          - https://${{ parameters.artifactId }}-dev.dev.bip.va.gov
+        baseUrl: https://bss-int.dev.bip.va.gov
+        realm: ${{ parameters.realm }}
+    - id: comment-ticket-jira
+      name: Leaving Comment on Jira Ticket
+      action: custom:addCommentAction
+      input:
+        jiraTicket: ${{ parameters.jiraTicket }}
+        appRepoUrl: ${{ steps['publish-app'].output.remoteUrl }}
+        chartRepoUrl: ${{ steps['push-charts-to-tenant-chart-repo'].output.REPO_URL }}
+        jenkinsPipelineUrl: ${{ steps['createJenkinsPipeline'].output.SCAFFOLDER_JENKINS_URL }}
+        argoProjectUrl: https://argo.dev.bip.va.gov/applications/${{
+          parameters.artifactId }}-dev
+  output:
+    links:
+      - title: Application Repo
+        icon: github
+        url: ${{ steps['publish-app'].output.remoteUrl }}
+      - title: Chart Repo
+        icon: scaffolder
+        url: ${{ steps['push-charts-to-tenant-chart-repo'].output.REPO_URL }}
+      - title: Please create and merge PR for app to deploy
+        icon: warning
+        url: ${{ steps['push-charts-to-tenant-chart-repo'].output.FALLBACK_URL }}
+      - title: Jenkins Build
+        icon: docs
+        url: ${{ steps['createJenkinsPipeline'].output.SCAFFOLDER_JENKINS_URL }}
+      - title: ArgoCd Project
+        icon: techdocs
+        url: https://argo.dev.bip.va.gov/applications/${{ parameters.artifactId }}-dev
