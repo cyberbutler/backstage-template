@@ -1,11 +1,11 @@
 apiVersion: backstage.io/v1alpha1
-kind: Component
+kind: API
 metadata:
-  name: a-unique-name-for-your-docs
-  annotations:
-    # this could also be `url:<url>` if the documentation isn't in the same location
-    backstage.io/techdocs-ref: dir:.
+  name: petstore
+  description: The Petstore API
 spec:
-  type: documentation
-  lifecycle: experimental
-  owner: user-or-team-name
+  type: openapi
+  lifecycle: production
+  owner: petstore@example.com
+  definition:
+    $text: https://github.com/department-of-veterans-affairs/bid-bih/tree/develop/test/template3.yml
