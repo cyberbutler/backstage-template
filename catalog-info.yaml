@@ -1,1 +1,2 @@
+apiVersion: backstage.io/v1alpha1
 $yaml: https://github.com/cyberbutler/backstage-template/tree/main/template.yml
